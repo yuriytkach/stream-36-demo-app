@@ -1,0 +1,50 @@
+name: Deploy Lambda
+
+on:
+  workflow_dispatch:
+    inputs:
+      releaseTag:
+        description: 'Release tag to deploy'
+        required: true
+  workflow_run:
+    workflows: ["Gradle Build and Test"]
+    branches:
+      - main
+    types:
+      - completed
+      
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+       
+      - name: Dowload function.zip from release
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            RELEASE_TAG=release-${{ github.event.workflow_run.run_number }}
+          else
+            RELEASE_TAG=${{ github.event.inputs.releaseTag }}
+          fi
+          curl -s https://api.github.com/repos/${{ github.repository }}/releases/tags/${RELEASE_TAG} \
+          | grep "browser_download_url.*zip" \
+          | cut -d '"' -f 4 \
+          | wget -i - -O function.zip
+          
+      - name: Deploy function
+        run: aws lambda update-function-code --function-name stream-36-lambda --zip-file fileb://function.zip
+        
+      - name: Tag AWS Lambda function
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            RELEASE_TAG=release-${{ github.event.workflow_run.run_number }}
+          else
+            RELEASE_TAG=${{ github.event.inputs.releaseTag }}
+          fi
+          aws lambda tag-resource --resource arn:aws:lambda:eu-west-1:330065802977:function:stream-36-lambda --tags release=${RELEASE_TAG}
