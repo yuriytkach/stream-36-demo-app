@@ -13,3 +13,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+          
+      - name: Grant permissions
+        run: chmod +x gradlew
+        
+      - name: Build
+        run: ./gradlew build -x test
+        
+      - name: Test
+        run: ./gradlew test
+        
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: |
+            build/test-results/test
+            build/reports/tests/test
+        
