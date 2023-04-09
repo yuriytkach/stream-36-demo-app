@@ -41,7 +41,7 @@ jobs:
       - name: Create Github release with function.zip
         uses: softprops/action-gh-release@v1
         env:
-          GITHUB_TOKEN: ${{ secret.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           file: build/function.zip
           tag_name: release-${{ github.run_number }}
