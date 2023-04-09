@@ -1,2 +1,2 @@
 greeting:
-  message: "Hello ${quarkus.application.name} ${quarkus.application.version}!"
+  message: "Slava Ukraini! ${quarkus.application.name} ${quarkus.application.version}!"
